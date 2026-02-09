@@ -69,7 +69,7 @@ def price_d(m, d):
     return m.p[demandes[d]['z']] <= demandes[d]['p'] + M * (1 - m.yd[d])
 m.c_price_d = Constraint(m.D, rule=price_d)
 
-opt = SolverFactory('glpk')
+opt = SolverFactory('gurobi')
 res = opt.solve(m, tee=True)
 
 print(f"Welfare: {value(m.obj)}")
