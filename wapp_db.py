@@ -27,7 +27,7 @@ def init_db():
         password_hash TEXT NOT NULL,
         display_name TEXT NOT NULL,
         email TEXT,
-        role TEXT NOT NULL CHECK(role IN ('admin','producteur','acheteur','tso','regulateur')),
+        role TEXT NOT NULL CHECK(role IN ('admin','participant','tso','regulateur')),
         zone TEXT,
         organisation TEXT,
         active INTEGER DEFAULT 1,
@@ -102,22 +102,57 @@ def init_db():
     );
     """)
 
-    # Seed default admin if empty
+    # Seed users — real WAPP member companies + IPPs
     if c.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
         users = [
-            ('admin', 'admin123', 'Administrateur WAPP', 'admin@wapp.org', 'admin', None, 'WAPP/EEEOA'),
-            ('voltalia', 'volt123', 'Voltalia Nigeria', 'voltalia@energy.com', 'producteur', 'NGA', 'Voltalia'),
-            ('egbin', 'egbin123', 'Egbin Power', 'ops@egbin.com', 'producteur', 'NGA', 'Egbin Power PLC'),
-            ('vra', 'vra123', 'VRA Ghana', 'dispatch@vra.com', 'producteur', 'GHA', 'Volta River Authority'),
-            ('cie', 'cie123', 'CIE Côte d\'Ivoire', 'marche@cie.ci', 'producteur', 'CIV', 'CI-Energies'),
-            ('senelec_prod', 'sen123', 'SENELEC Production', 'prod@senelec.sn', 'producteur', 'SEN', 'SENELEC'),
-            ('tcn', 'tcn123', 'TCN Nigeria', 'dispatch@tcn.org.ng', 'acheteur', 'NGA', 'TCN'),
-            ('ecg', 'ecg123', 'ECG Ghana', 'procurement@ecg.com.gh', 'acheteur', 'GHA', 'ECG'),
-            ('sbee', 'sbee123', 'SBEE Bénin', 'achat@sbee.bj', 'acheteur', 'BEN', 'SBEE'),
-            ('sonabel', 'sona123', 'SONABEL Burkina', 'import@sonabel.bf', 'acheteur', 'BFA', 'SONABEL'),
-            ('senelec_buy', 'senb123', 'SENELEC Achat', 'achat@senelec.sn', 'acheteur', 'SEN', 'SENELEC'),
-            ('wapp_tso', 'tso123', 'WAPP TSO', 'tso@wapp.org', 'tso', None, 'WAPP ICC'),
-            ('erera', 'erera123', 'ERERA Régulateur', 'audit@erera.org', 'regulateur', None, 'ERERA'),
+            # Admin & Institutional
+            ('admin', 'admin123', 'Opérateur de Marché WAPP', 'admin@wapp.org', 'admin', None, 'WAPP SMO'),
+            ('wapp_tso', 'tso123', 'WAPP ICC (Centre de Coordination)', 'icc@wapp.org', 'tso', None, 'WAPP ICC'),
+            ('erera', 'erera123', 'ERERA / ARREC', 'audit@erera.org', 'regulateur', None, 'ERERA'),
+
+            # National Utilities — Vertically Integrated (produce + distribute)
+            ('senelec', 'sen123', 'SENELEC', 'marche@senelec.sn', 'participant', 'SEN', 'SENELEC'),
+            ('cie', 'cie123', 'CI-Energies / CIE', 'marche@cie.ci', 'participant', 'CIV', 'CI-Energies'),
+            ('edm', 'edm123', 'EDM-SA', 'marche@edm.ml', 'participant', 'MLI', 'EDM-SA'),
+            ('sonabel', 'sona123', 'SONABEL', 'marche@sonabel.bf', 'participant', 'BFA', 'SONABEL'),
+            ('nigelec', 'nig123', 'NIGELEC', 'marche@nigelec.ne', 'participant', 'NER', 'NIGELEC'),
+            ('edg', 'edg123', 'EDG (Electricité de Guinée)', 'marche@edg.gn', 'participant', 'GIN', 'EDG'),
+            ('nawec', 'naw123', 'NAWEC', 'marche@nawec.gm', 'participant', 'GMB', 'NAWEC'),
+            ('eagb', 'eagb123', 'EAGB', 'marche@eagb.gw', 'participant', 'GNB', 'EAGB'),
+            ('lec', 'lec123', 'LEC (Liberia)', 'marche@lec.lr', 'participant', 'LBR', 'LEC'),
+            ('edsa', 'edsa123', 'EDSA (Sierra Leone)', 'marche@edsa.sl', 'participant', 'SLE', 'EDSA'),
+
+            # Ghana (unbundled): VRA=production, GRIDCo=transport, ECG/NEDCO=distribution
+            ('vra', 'vra123', 'VRA (Volta River Authority)', 'dispatch@vra.com.gh', 'participant', 'GHA', 'VRA'),
+            ('gridco', 'grid123', 'GRIDCo', 'ops@gridco.com.gh', 'tso', 'GHA', 'GRIDCo'),
+            ('ecg', 'ecg123', 'ECG (Electricity Company of Ghana)', 'achat@ecg.com.gh', 'participant', 'GHA', 'ECG'),
+            ('nedco', 'ned123', 'NEDCO', 'achat@nedco.com.gh', 'participant', 'GHA', 'NEDCO'),
+
+            # Nigeria (unbundled): GenCos, TCN=transport, DisCos
+            ('tcn', 'tcn123', 'TCN (Transmission Company of Nigeria)', 'dispatch@tcn.org.ng', 'tso', 'NGA', 'TCN'),
+            ('egbin', 'egbin123', 'Egbin Power PLC', 'trading@egbin.com', 'participant', 'NGA', 'Egbin Power'),
+            ('geregu', 'ger123', 'Geregu Power PLC', 'trading@geregu.com', 'participant', 'NGA', 'Geregu Power'),
+            ('delta', 'delta123', 'Transcorp Ughelli (Delta)', 'trading@transcorp.com', 'participant', 'NGA', 'Transcorp Ughelli'),
+            ('afam', 'afam123', 'Afam Power PLC', 'trading@afam.com', 'participant', 'NGA', 'Afam Power'),
+
+            # Bénin & Togo (CEB = entité binationale production + transport)
+            ('ceb', 'ceb123', 'CEB (Communauté Electrique du Bénin)', 'marche@ceb.org', 'participant', 'BEN', 'CEB'),
+            ('sbee', 'sbee123', 'SBEE (Distribution Bénin)', 'achat@sbee.bj', 'participant', 'BEN', 'SBEE'),
+            ('ceet', 'ceet123', 'CEET (Distribution Togo)', 'achat@ceet.tg', 'participant', 'TGO', 'CEET'),
+
+            # Multinationals (OMVS, OMVG)
+            ('omvs', 'omvs123', 'OMVS-SOGEM', 'marche@omvs.org', 'participant', 'SEN', 'OMVS-SOGEM'),
+            ('omvg', 'omvg123', 'OMVG', 'marche@omvg.org', 'participant', 'GIN', 'OMVG'),
+
+            # IPPs (Independent Power Producers)
+            ('ciprel', 'cip123', 'CIPREL', 'trading@ciprel.ci', 'participant', 'CIV', 'CIPREL'),
+            ('azito', 'azi123', 'Azito Energie', 'trading@azito.ci', 'participant', 'CIV', 'Azito Energie'),
+            ('contglobal', 'cg123', 'ContourGlobal Togo', 'trading@contourglobal.com', 'participant', 'TGO', 'ContourGlobal'),
+            ('mainstream', 'main123', 'Mainstream Energy', 'trading@mainstream.ng', 'participant', 'NGA', 'Mainstream Energy'),
+            ('sunon', 'sun123', 'Sunon Asogli (Ghana)', 'trading@sunonasogli.com', 'participant', 'GHA', 'Sunon Asogli'),
+            ('cenpower', 'cen123', 'Cenpower Kpone', 'trading@cenpower.com.gh', 'participant', 'GHA', 'Cenpower'),
+            ('karpower', 'karp123', 'Karpowership', 'trading@karpowership.com', 'participant', 'GHA', 'Karpowership'),
+            ('aggreko', 'agg123', 'Aggreko', 'trading@aggreko.com', 'participant', 'CIV', 'Aggreko'),
         ]
         for u in users:
             pw_hash = hashlib.sha256(u[1].encode()).hexdigest()
