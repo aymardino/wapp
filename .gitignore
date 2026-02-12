@@ -1,2 +1,16 @@
 __pycache__/
 *.pyc
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.lot
+*.lof
+*.out
+*.synctex.gz
+*.toc
+*.xml
+*.pdf
